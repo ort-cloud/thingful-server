@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 const ReviewsService = require("./reviews-service");
-const {requireAuth} = require("../middleware/basic-auth");
+const {requireAuth} = require("../middleware/jwt-auth");
 
 const reviewsRouter = express.Router();
 const jsonBodyParser = express.json();
@@ -17,19 +17,15 @@ reviewsRouter.route("/").post(requireAuth, jsonBodyParser, (req, res, next) => {
       });
 
   newReview.user_id = req.user.id;
-  console.log("inside reviews router part 1");
+
   ReviewsService.insertReview(req.app.get("db"), newReview)
     .then(review => {
-      console.log("inside then block");
       res
         .status(201)
         .location(path.posix.join(req.originalUrl, `/${review.id}`))
         .json(ReviewsService.serializeReview(review));
     })
-    .catch(err => {
-      console.log(err);
-      next();
-    });
+    .catch(next);
 });
 
 module.exports = reviewsRouter;
